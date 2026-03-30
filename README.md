@@ -2,95 +2,116 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>社團選填系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>學校社團選填系統</title>
   <style>
     body {
-      font-family: '微軟正黑體', sans-serif;
-      margin: 20px;
-      background: #f5f7fa;
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: #f4f7fb;
+      margin: 0;
+      padding: 20px;
       color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
     }
     h1 {
       text-align: center;
-      color: #2c3e50;
-    }
-    h2 {
-      color: #34495e;
-      border-bottom: 2px solid #3498db;
-      padding-bottom: 5px;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
+      margin-bottom: 20px;
+      color: #1f3b68;
     }
     .panel {
-      background: white;
+      background: #fff;
+      border-radius: 12px;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+      color: #224b7a;
     }
     .form-group {
       margin-bottom: 15px;
     }
     label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       font-weight: bold;
     }
-    input, select {
+    input {
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
       box-sizing: border-box;
+      font-size: 16px;
     }
     button {
-      background: #3498db;
-      color: white;
       border: none;
-      padding: 10px 20px;
+      border-radius: 8px;
+      padding: 10px 16px;
       font-size: 16px;
-      border-radius: 4px;
       cursor: pointer;
+      background: #2d7ff9;
+      color: white;
     }
     button:hover {
-      background: #2980b9;
+      background: #1f68d6;
     }
     button:disabled {
-      background: #95a5a6;
+      background: #999;
       cursor: not-allowed;
+    }
+    .hidden {
+      display: none;
+    }
+    .alert {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .success {
+      background: #e7f7ec;
+      color: #1c7c3a;
+      border: 1px solid #bce5c8;
+    }
+    .danger {
+      background: #fdecec;
+      color: #b42318;
+      border: 1px solid #f5b5b5;
     }
     .club-list {
       display: grid;
-      gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
     .club-item {
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      border: 1px solid #dbe4f0;
+      border-radius: 10px;
+      padding: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: #fafcff;
+    }
+    .club-info {
+      line-height: 1.5;
     }
     .club-name {
+      font-size: 18px;
       font-weight: bold;
+      color: #16304f;
     }
     .club-count {
-      color: #e74c3c;
+      color: #555;
+      margin-top: 4px;
     }
-    .club-full {
-      color: #c0392b;
+    .full {
+      color: #d93025;
       font-weight: bold;
-    }
-    .club-status {
-      font-size: 0.9em;
-      margin-top: 5px;
-    }
-    .admin-panel {
-      background: #f9f9f9;
-      padding: 15px;
-      border: 1px dashed #3498db;
     }
     .admin-table {
       width: 100%;
@@ -99,35 +120,16 @@
     }
     .admin-table th,
     .admin-table td {
-      border: 1px solid #ddd;
-      padding: 8px;
+      border: 1px solid #cfd8e3;
+      padding: 10px;
+      text-align: center;
     }
     .admin-table th {
-      background: #34495e;
+      background: #224b7a;
       color: white;
     }
-    .admin-table td {
-      background: #fff;
-    }
-    .alert {
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 4px;
-      text-align: center;
-      font-weight: bold;
-    }
-    .alert-success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    .alert-danger {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    .hidden {
-      display: none;
+    .admin-table tr:nth-child(even) {
+      background: #f8fbff;
     }
   </style>
 </head>
@@ -135,266 +137,249 @@
   <div class="container">
     <h1>學校社團選填系統</h1>
 
-    <!-- 學生輸入區 -->
-    <div id="studentInput" class="panel">
-      <h2>學生資料</h2>
+    <div id="studentFormPanel" class="panel">
+      <h2>學生資料輸入</h2>
       <div class="form-group">
-        <label>班級</label>
-        <input type="text" id="classInput" placeholder="例如：101" />
+        <label for="classInput">班級</label>
+        <input type="text" id="classInput" placeholder="例如：801" />
       </div>
       <div class="form-group">
-        <label>學號</label>
-        <input type="text" id="studentIdInput" placeholder="例如：12345" />
+        <label for="studentIdInput">學號</label>
+        <input type="text" id="studentIdInput" placeholder="例如：15" />
       </div>
       <div class="form-group">
-        <label>姓名</label>
-        <input type="text" id="nameInput" placeholder="你的姓名" />
+        <label for="nameInput">姓名</label>
+        <input type="text" id="nameInput" placeholder="例如：王小明" />
       </div>
-      <button id="nextBtn">下一步 選社團</button>
-      <div id="alertStudent" class="alert hidden"></div>
+      <button id="checkBtn">下一步</button>
+      <div id="studentMsg" class="alert hidden"></div>
     </div>
 
-    <!-- 社團選填區 -->
-    <div id="clubSelect" class="panel hidden">
+    <div id="clubPanel" class="panel hidden">
       <h2>請選擇社團</h2>
-      <p>目前每人只能選一個社團，已滿人之社團無法再選。</p>
+      <p>每位學生只能選一個社團，選過後不能再選。</p>
       <div id="clubList" class="club-list"></div>
-      <div id="alertSelect" class="alert hidden"></div>
+      <div id="clubMsg" class="alert hidden"></div>
     </div>
 
-    <!-- 管理者登入區 -->
-    <div id="adminLogin" class="panel">
+    <div id="adminLoginPanel" class="panel">
       <h2>管理者登入</h2>
       <div class="form-group">
-        <label>帳號</label>
+        <label for="adminUser">帳號</label>
         <input type="text" id="adminUser" placeholder="admin" />
       </div>
       <div class="form-group">
-        <label>密碼</label>
+        <label for="adminPass">密碼</label>
         <input type="password" id="adminPass" placeholder="sjjh313" />
       </div>
       <button id="loginBtn">登入</button>
-      <div id="alertAdmin" class="alert hidden"></div>
+      <div id="adminMsg" class="alert hidden"></div>
     </div>
 
-    <!-- 管理介面 -->
-    <div id="adminPanel" class="panel admin-panel hidden">
-      <h2>管理介面</h2>
-      <p>以下為所有學生選社情況：</p>
-      <div id="adminTableContainer"></div>
+    <div id="adminPanel" class="panel hidden">
+      <h2>管理者介面</h2>
+      <div id="tableArea"></div>
     </div>
   </div>
 
   <script>
-    // =========== 定義資料 ===========
     const CLUBS = [
-      { id: "badminton",  name: "羽球社",    max: 25 },
-      { id: "handball",   name: "手球社",    max: 25 },
-      { id: "clay",       name: "黏土社",    max: 25 },
-      { id: "movie",      name: "電影欣賞社", max: 25 },
-      { id: "go",         name: "圍棋社",    max: 25 },
-      { id: "chess",      name: "象棋社",    max: 25 },
-      { id: "shadow",     name: "山中剪影社", max: 12 },
-      { id: "tableTennis",name: "桌球社",    max: 12 },
-      { id: "fashion",    name: "時尚造型社", max: 25 },
+      { id: "badminton", name: "羽球社", max: 25 },
+      { id: "handball", name: "手球社", max: 25 },
+      { id: "clay", name: "黏土社", max: 25 },
+      { id: "movie", name: "電影欣賞社", max: 25 },
+      { id: "go", name: "圍棋社", max: 25 },
+      { id: "chess", name: "象棋社", max: 25 },
+      { id: "shadow", name: "山中剪影社", max: 12 },
+      { id: "tableTennis", name: "桌球社", max: 12 },
+      { id: "fashion", name: "時尚造型社", max: 25 }
     ];
 
     const ADMIN_USER = "admin";
     const ADMIN_PASS = "sjjh313";
 
-    // 用 localStorage 保存資料
+    let currentStudent = null;
+
     function loadStudents() {
-      const data = localStorage.getItem("students");
-      return data ? JSON.parse(data) : [];
+      return JSON.parse(localStorage.getItem("students")) || [];
     }
 
-    function saveStudents(students) {
-      localStorage.setItem("students", JSON.stringify(students));
+    function saveStudents(data) {
+      localStorage.setItem("students", JSON.stringify(data));
     }
 
     function loadCounts() {
-      const data = localStorage.getItem("clubCounts");
-      if (!data) {
-        // 初始化社團人數
-        const counts = {};
-        CLUBS.forEach(c => (counts[c.id] = 0));
-        localStorage.setItem("clubCounts", JSON.stringify(counts));
-        return counts;
-      }
-      return JSON.parse(data);
+      return JSON.parse(localStorage.getItem("clubCounts")) || {};
     }
 
-    function saveCounts(counts) {
-      localStorage.setItem("clubCounts", JSON.stringify(counts));
+    function saveCounts(data) {
+      localStorage.setItem("clubCounts", JSON.stringify(data));
+    }
+
+    function initCounts() {
+      let counts = loadCounts();
+      if (Object.keys(counts).length === 0) {
+        counts = {};
+        CLUBS.forEach(c => counts[c.id] = 0);
+      }
+      return counts;
     }
 
     let students = loadStudents();
-    let clubCounts = loadCounts();
+    let clubCounts = initCounts();
 
-    // =========== 工具函式 ===========
-    function showAlert(elId, msg, type) {
-      const el = document.getElementById(elId);
-      el.textContent = msg;
-      el.className = "alert " + (type === "success" ? "alert-success" : "alert-danger");
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = `alert ${type}`;
       el.classList.remove("hidden");
     }
 
-    function hideAlert(elId) {
-      document.getElementById(elId).classList.add("hidden");
+    function hideMsg(id) {
+      document.getElementById(id).classList.add("hidden");
     }
 
-    function isStudentExist(class_, id_, name_) {
-      return students.some(s => s.class === class_ && s.studentId === id_);
+    function studentAlreadySelected(className, studentId) {
+      return students.some(s => s.class === className && s.studentId === studentId);
     }
 
-    // =========== 學生選社流程 ===========
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      const class_ = document.getElementById("classInput").value.trim();
-      const id_ = document.getElementById("studentIdInput").value.trim();
-      const name = document.getElementById("nameInput").value.trim();
-
-      if (!class_ || !id_ || !name) {
-        showAlert("alertStudent", "請填寫完整班級、學號與姓名。", "danger");
-        return;
-      }
-
-      if (isStudentExist(class_, id_, name)) {
-        showAlert("alertStudent", "您已報名過一個社團，無法再更改。", "danger");
-        return;
-      }
-
-      // 顯示選社區
-      document.getElementById("studentInput").classList.add("hidden");
-      document.getElementById("clubSelect").classList.remove("hidden");
-      hideAlert("alertStudent");
-
-      // 建立社團列表
-      const clubListEl = document.getElementById("clubList");
-      clubListEl.innerHTML = "";
+    function renderClubs() {
+      const list = document.getElementById("clubList");
+      list.innerHTML = "";
 
       CLUBS.forEach(club => {
-        const count = clubCounts[club.id];
-        const isFull = count >= club.max;
+        const count = clubCounts[club.id] || 0;
+        const full = count >= club.max;
 
         const item = document.createElement("div");
         item.className = "club-item";
 
-        const left = document.createElement("div");
-        left.className = "club-left";
-
-        const nameEl = document.createElement("div");
-        nameEl.className = "club-name";
-        nameEl.textContent = `${club.name} (上限 ${club.max} 人)`;
-
-        const status = document.createElement("div");
-        status.className = "club-status " + (isFull ? "club-full" : "");
-        status.textContent = `目前人數：${count} 人`;
-
-        left.appendChild(nameEl);
-        left.appendChild(status);
-
-        const right = document.createElement("div");
-        right.className = "club-right";
+        const info = document.createElement("div");
+        info.className = "club-info";
+        info.innerHTML = `
+          <div class="club-name">${club.name}</div>
+          <div class="club-count ${full ? "full" : ""}">
+            目前人數：${count} / ${club.max} ${full ? "（已額滿）" : ""}
+          </div>
+        `;
 
         const btn = document.createElement("button");
-        btn.textContent = isFull ? "已額滿" : "選擇";
-        btn.disabled = isFull;
+        btn.textContent = full ? "已額滿" : "選擇";
+        btn.disabled = full;
 
         btn.addEventListener("click", () => {
+          if (!currentStudent) return;
+
+          if (studentAlreadySelected(currentStudent.class, currentStudent.studentId)) {
+            showMsg("clubMsg", "您已選過社團，不能再重複選填。", "danger");
+            return;
+          }
+
           students.push({
-            class: class_,
-            studentId: id_,
-            name: name,
-            club: club.id,
+            class: currentStudent.class,
+            studentId: currentStudent.studentId,
+            name: currentStudent.name,
+            club: club.id
           });
-          clubCounts[club.id]++;
+
+          clubCounts[club.id] = count + 1;
           saveStudents(students);
           saveCounts(clubCounts);
 
-          showAlert("alertSelect", `成功選社：「${club.name}」，系統已記錄。`, "success");
-          btn.disabled = true;
-          btn.textContent = "已選";
-          status.textContent = `目前人數：${clubCounts[club.id]} 人`;
+          showMsg("clubMsg", `成功選擇「${club.name}」`, "success");
+          renderClubs();
         });
 
-        right.appendChild(btn);
-
-        item.appendChild(left);
-        item.appendChild(right);
-        clubListEl.appendChild(item);
+        item.appendChild(info);
+        item.appendChild(btn);
+        list.appendChild(item);
       });
+    }
+
+    document.getElementById("checkBtn").addEventListener("click", () => {
+      const className = document.getElementById("classInput").value.trim();
+      const studentId = document.getElementById("studentIdInput").value.trim();
+      const name = document.getElementById("nameInput").value.trim();
+
+      if (!className || !studentId || !name) {
+        showMsg("studentMsg", "請輸入完整的班級、學號與姓名。", "danger");
+        return;
+      }
+
+      if (studentAlreadySelected(className, studentId)) {
+        showMsg("studentMsg", "你已經選過社團，不能再次選填。", "danger");
+        return;
+      }
+
+      currentStudent = { class: className, studentId, name };
+      hideMsg("studentMsg");
+      document.getElementById("clubPanel").classList.remove("hidden");
+      renderClubs();
     });
 
-    // =========== 管理者登入 ===========
     document.getElementById("loginBtn").addEventListener("click", () => {
       const user = document.getElementById("adminUser").value.trim();
       const pass = document.getElementById("adminPass").value.trim();
 
       if (user === ADMIN_USER && pass === ADMIN_PASS) {
-        document.getElementById("adminLogin").classList.add("hidden");
+        hideMsg("adminMsg");
         document.getElementById("adminPanel").classList.remove("hidden");
-        hideAlert("alertAdmin");
         renderAdminTable();
       } else {
-        showAlert("alertAdmin", "帳號或密碼錯誤，請檢查後再試。", "danger");
+        showMsg("adminMsg", "帳號或密碼錯誤。", "danger");
       }
     });
 
-    // =========== 管理介面：顯示所有學生選社結果 ===========
     function renderAdminTable() {
-      const container = document.getElementById("adminTableContainer");
-      const list = students;
-
-      if (list.length === 0) {
-        container.innerHTML = "<p>目前尚無學生報名社團。</p>";
+      const area = document.getElementById("tableArea");
+      if (students.length === 0) {
+        area.innerHTML = "<p>目前沒有學生選社資料。</p>";
         return;
       }
 
       const table = document.createElement("table");
       table.className = "admin-table";
-
-      const thead = document.createElement("thead");
-      const trHead = document.createElement("tr");
-      trHead.innerHTML = `
-        <th>班級</th>
-        <th>學號</th>
-        <th>姓名</th>
-        <th>社團</th>
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>班級</th>
+            <th>學號</th>
+            <th>姓名</th>
+            <th>社團</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map(s => {
+            const clubName = CLUBS.find(c => c.id === s.club)?.name || "未知";
+            return `
+              <tr>
+                <td>${s.class}</td>
+                <td>${s.studentId}</td>
+                <td>${s.name}</td>
+                <td>${clubName}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
       `;
-      thead.appendChild(trHead);
-
-      const tbody = document.createElement("tbody");
-      list.forEach(item => {
-        const clubName = CLUBS.find(c => c.id === item.club)?.name || "未知";
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.class}</td>
-          <td>${item.studentId}</td>
-          <td>${item.name}</td>
-          <td>${clubName}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      container.innerHTML = "";
-      container.appendChild(table);
+      area.innerHTML = "";
+      area.appendChild(table);
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-      // 每次載入都重新計算人數，避免被手動修改資料後不符
-      const counts = {};
-      CLUBS.forEach(c => (counts[c.id] = 0));
-
+    window.addEventListener("load", () => {
+      clubCounts = initCounts();
       students.forEach(s => {
-        if (counts[s.club] !== undefined) {
-          counts[s.club]++;
-        }
+        if (clubCounts[s.club] === undefined) clubCounts[s.club] = 0;
       });
 
-      clubCounts = counts;
-      saveCounts(counts);
+      const rebuilt = {};
+      CLUBS.forEach(c => rebuilt[c.id] = 0);
+      students.forEach(s => {
+        if (rebuilt[s.club] !== undefined) rebuilt[s.club]++;
+      });
+      clubCounts = rebuilt;
+      saveCounts(clubCounts);
+      saveStudents(students);
     });
   </script>
 </body>
