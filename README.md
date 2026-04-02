@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title> 山腳國中社團選填系統 </title>
+  <title>學校社團選填系統 </title>
   <style>
     body {
       font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
