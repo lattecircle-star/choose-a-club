@@ -148,7 +148,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>學校社團選填系統 </h1>
+    <h1>山腳國中社團選填系統 </h1>
 
     <div id="studentFormPanel" class="panel">
       <h2>學生資料輸入</h2>
