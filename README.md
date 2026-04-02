@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>學校社團選填系統（Firebase 最終版）</title>
+  <title> 山腳國中社團選填系統 </title>
   <style>
     body {
       font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
@@ -56,6 +56,8 @@
       cursor: pointer;
       background: #2d7ff9;
       color: white;
+      margin-right: 8px;
+      margin-top: 6px;
     }
     button:hover {
       background: #1f68d6;
@@ -63,6 +65,12 @@
     button:disabled {
       background: #999;
       cursor: not-allowed;
+    }
+    .danger-btn {
+      background: #d93025;
+    }
+    .danger-btn:hover {
+      background: #b3261e;
     }
     .hidden {
       display: none;
@@ -96,9 +104,6 @@
       justify-content: space-between;
       align-items: center;
       background: #fafcff;
-    }
-    .club-info {
-      line-height: 1.5;
     }
     .club-name {
       font-size: 18px;
@@ -136,11 +141,14 @@
       color: #666;
       margin-top: 8px;
     }
+    .toolbar {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>學校社團選填系統（Firebase 最終版）</h1>
+    <h1>學校社團選填系統（最終折衷版）</h1>
 
     <div id="studentFormPanel" class="panel">
       <h2>學生資料輸入</h2>
@@ -149,15 +157,15 @@
         <input type="text" id="classInput" placeholder="請輸入班級，例如 801" />
       </div>
       <div class="form-group">
-        <label for="studentIdInput">學號</label>
-        <input type="text" id="studentIdInput" placeholder="請輸入學號，例如 15" />
+        <label for="studentIdInput">座號</label>
+        <input type="text" id="studentIdInput" placeholder="請輸入座號，例如 15" />
       </div>
       <div class="form-group">
         <label for="nameInput">姓名</label>
         <input type="text" id="nameInput" placeholder="請輸入姓名" />
       </div>
       <button id="checkBtn">下一步 選社團</button>
-      <div class="note">同一位學生只能選一次，選完後不能再選。</div>
+      <div class="note">同一位學生只能選一次，所有裝置會即時同步。</div>
       <div id="studentMsg" class="alert hidden"></div>
     </div>
 
@@ -179,22 +187,26 @@
         <input type="password" id="adminPass" placeholder="請輸入密碼" />
       </div>
       <button id="loginBtn">登入</button>
+      <button id="logoutBtn" class="hidden">登出</button>
       <div id="adminMsg" class="alert hidden"></div>
     </div>
 
     <div id="adminPanel" class="panel hidden">
       <h2>管理者介面</h2>
-      <p>以下資料會即時同步顯示。</p>
+      <div class="toolbar">
+        <button id="deleteAllBtn" class="danger-btn">刪除全部選社資料</button>
+      </div>
       <div id="tableArea"></div>
     </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
   <script>
-    // 請改成你自己的 Firebase 設定
-    const firebaseConfig = {
+    // ===== 這裡改成你的 Firebase 設定 =====
+   const firebaseConfig = {
   apiKey: "AIzaSyD0YuLv3GJIhr9rXUOFjjoyX58ulQ9V-kM",
   authDomain: "club-selection-system.firebaseapp.com",
   projectId: "club-selection-system",
@@ -204,8 +216,18 @@
   measurementId: "G-QW834C9LBZ"
 };
 
+    // ===== 這裡保留你原本想要的入口帳密 =====
+    const DISPLAY_ADMIN_USER = "admin";
+    const DISPLAY_ADMIN_PASS = "sjjh313";
+
+    // ===== 這裡改成真正 Firebase 管理者帳號 =====
+    const FIREBASE_ADMIN_EMAIL = "lattecircle@gmail.com";
+    const FIREBASE_ADMIN_PASSWORD = "lily791217";
+
     firebase.initializeApp(firebaseConfig);
+
     const db = firebase.database();
+    const auth = firebase.auth();
     const studentsRef = db.ref("students");
 
     const CLUBS = [
@@ -220,12 +242,9 @@
       { id: "fashion", name: "時尚造型社", max: 25 }
     ];
 
-    const ADMIN_USER = "admin";
-    const ADMIN_PASS = "sjjh313";
-
     let currentStudent = null;
     let students = [];
-    let clubCounts = {};
+    let clubCounts = [];
 
     function showMsg(id, text, type) {
       const el = document.getElementById(id);
@@ -272,7 +291,6 @@
         item.className = "club-item";
 
         const info = document.createElement("div");
-        info.className = "club-info";
         info.innerHTML = `
           <div class="club-name">${club.name}</div>
           <div class="club-count ${full ? "club-full" : ""}">
@@ -293,12 +311,11 @@
           }
 
           if (full) {
-            showMsg("clubMsg", `「${club.name}」已額滿，請選擇其他社團。`, "danger");
+            showMsg("clubMsg", `「${club.name}」已額滿，請選其他社團。`, "danger");
             return;
           }
 
           const studentKey = makeStudentKey(currentStudent.class, currentStudent.studentId);
-
           const newStudent = {
             class: currentStudent.class,
             studentId: currentStudent.studentId,
@@ -313,7 +330,7 @@
             showMsg("clubMsg", `成功選擇「${club.name}」`, "success");
           } catch (error) {
             console.error(error);
-            showMsg("clubMsg", "寫入失敗，可能已選過或規則不允許，請重新整理後再試。", "danger");
+            showMsg("clubMsg", "寫入失敗，請確認 Firebase 規則是否正確。", "danger");
           }
         });
 
@@ -332,8 +349,8 @@
       }
 
       const sortedStudents = [...students].sort((a, b) => {
-        if (a.class !== b.class) return String(a.class).localeCompare(String(b.class), 'zh-Hant');
-        return String(a.studentId).localeCompare(String(b.studentId), 'zh-Hant');
+        if (a.class !== b.class) return String(a.class).localeCompare(String(b.class), "zh-Hant");
+        return String(a.studentId).localeCompare(String(b.studentId), "zh-Hant");
       });
 
       const table = document.createElement("table");
@@ -365,9 +382,15 @@
       area.appendChild(table);
     }
 
+    async function verifyFirebaseAdmin() {
+      const user = auth.currentUser;
+      if (!user) return false;
+      const tokenResult = await user.getIdTokenResult(true);
+      return tokenResult.claims.admin === true;
+    }
+
     studentsRef.on("value", snapshot => {
       students = [];
-
       snapshot.forEach(child => {
         const data = child.val();
         if (data) students.push(data);
@@ -402,17 +425,82 @@
       document.getElementById("clubPanel").classList.remove("hidden");
     });
 
-    document.getElementById("loginBtn").addEventListener("click", () => {
-      const user = document.getElementById("adminUser").value.trim();
-      const pass = document.getElementById("adminPass").value.trim();
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const inputUser = document.getElementById("adminUser").value.trim();
+      const inputPass = document.getElementById("adminPass").value.trim();
 
-      if (user === ADMIN_USER && pass === ADMIN_PASS) {
+      if (inputUser !== DISPLAY_ADMIN_USER || inputPass !== DISPLAY_ADMIN_PASS) {
+        showMsg("adminMsg", "帳號或密碼錯誤。", "danger");
+        return;
+      }
+
+      try {
+        await auth.signInWithEmailAndPassword(FIREBASE_ADMIN_EMAIL, FIREBASE_ADMIN_PASSWORD);
+        const isAdmin = await verifyFirebaseAdmin();
+
+        if (!isAdmin) {
+          showMsg("adminMsg", "Firebase 管理者帳號沒有 admin 權限。", "danger");
+          await auth.signOut();
+          return;
+        }
+
         hideMsg("adminMsg");
-        document.getElementById("adminLoginPanel").classList.add("hidden");
         document.getElementById("adminPanel").classList.remove("hidden");
+        document.getElementById("logoutBtn").classList.remove("hidden");
         renderAdminTable();
-      } else {
-        showMsg("adminMsg", "帳號或密碼錯誤，請再試一次。", "danger");
+      } catch (error) {
+        console.error(error);
+        showMsg("adminMsg", "Firebase 管理者登入失敗，請檢查 Email、密碼或 admin claim。", "danger");
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        await auth.signOut();
+      } catch (e) {
+        console.error(e);
+      }
+      document.getElementById("adminPanel").classList.add("hidden");
+      document.getElementById("logoutBtn").classList.add("hidden");
+      showMsg("adminMsg", "已登出。", "success");
+    });
+
+    document.getElementById("deleteAllBtn").addEventListener("click", async () => {
+      const ok = confirm("確定要刪除全部選社資料嗎？此動作無法復原。");
+      if (!ok) return;
+
+      try {
+        const isAdmin = await verifyFirebaseAdmin();
+        if (!isAdmin) {
+          showMsg("adminMsg", "你沒有 admin 權限，無法刪除資料。", "danger");
+          return;
+        }
+
+        await studentsRef.remove();
+        alert("已刪除全部選社資料");
+        showMsg("adminMsg", "全部資料已刪除。", "success");
+      } catch (error) {
+        console.error(error);
+        showMsg("adminMsg", "刪除失敗，請確認 Firebase 規則與 admin claim。", "danger");
+      }
+    });
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        document.getElementById("adminPanel").classList.add("hidden");
+        document.getElementById("logoutBtn").classList.add("hidden");
+        return;
+      }
+
+      try {
+        const isAdmin = await verifyFirebaseAdmin();
+        if (isAdmin) {
+          document.getElementById("adminPanel").classList.remove("hidden");
+          document.getElementById("logoutBtn").classList.remove("hidden");
+          renderAdminTable();
+        }
+      } catch (error) {
+        console.error(error);
       }
     });
 
